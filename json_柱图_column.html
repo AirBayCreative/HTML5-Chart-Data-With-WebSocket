@@ -1,0 +1,80 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>zw曲线图</title>
+<script src="js/jquery-1.7.2.min.js" type="text/javascript"></script>
+<script src="js/highcharts.js" type="text/javascript"></script>
+<script type='text/javascript'>  
+    //<![CDATA[
+    $(function () {
+        var socket = new WebSocket('ws://127.0.0.1:8080');  //监听8080端口
+        var temp = [44, 77, 22, 78, 88];  //初始数值
+        //声明报表对象  
+        var chart = new Highcharts.Chart({
+            chart: {
+                //将报表对象渲染到层上  
+                renderTo: 'container',
+				
+            },
+             
+            xAxis: { 
+			 type: 'datetime',
+			 
+			 zoomType: String
+			},
+         
+
+            //设定报表对象的初始数据  
+             series: [{
+                type: 'column',
+                name: 'Jane',
+                data: [3, 2, 1, 3, 4]
+            }]
+        });
+
+
+
+        socket.onopen = function () {   //socket接收数据函数
+            console.log('连接成功');       //console 显示连接成功
+            socket.send('test');       //接收服务端发送的test变量
+        }
+
+        socket.onmessage = function (data) {     
+            var d = JSON.parse(data.data);   //定义d为JSON格式数值
+            console.log(d.data);   //输出d数值
+            //            
+          //  d = data;
+            temp.push(d.data);  //传给temp
+            console.log(temp);  //输出
+            chart.series[0].setData(temp); //传给图表series,也就是y轴上的值
+        }
+
+        socket.onclose = function () {      //本次传值结束，关闭连接
+            console.log('关闭');            //console 显示关闭
+        }
+        //        function getForm(){  
+        //                                                //使用JQuery从后台获取JSON格式的数据  
+        //            jQuery.getJSON('127.0.0.1:8888', null, function(data) {  
+        //                  console.log(data);                                              //为图表设置值  
+        //                //chart.series[0].setData(data);  
+        //            });  
+        //        }  
+        //  
+        //      
+        //        $(document).ready(function() {  
+        //            //每隔3秒自动调用方法，实现图表的实时更新  
+        //            window.setInterval(getForm,3000);   
+        //              
+        //        });  
+
+
+    });  
+    //]]>   
+    </script>  
+</head>
+
+<body>
+<div id="container" style="height: 400px"></div>
+</body>
+</html>

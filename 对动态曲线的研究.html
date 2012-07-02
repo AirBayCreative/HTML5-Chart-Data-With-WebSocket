@@ -1,0 +1,116 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>无标题文档</title>
+<script src="js/jquery-1.7.2.min.js" type="text/javascript"></script>
+<script src="js/highcharts.js" type="text/javascript"></script>
+<script type="text/javascript">
+
+
+$(function () {
+	var socket = new WebSocket('ws://127.0.0.1:8080'); 
+	 var temp = [44, 77, 22, 78, 88]; 
+    $(document).ready(function() {
+        Highcharts.setOptions({
+            global: {
+                useUTC: false
+            }
+        });
+    
+        var chart;
+        chart = new Highcharts.Chart({
+            chart: {
+                renderTo: 'container',
+                type: 'spline',
+                marginRight: 10,
+                events: {
+                    load: function() {
+    
+                        // set up the updating of the chart each second
+                        var series = this.series[0];
+                        setInterval(function() {
+                            var x = (new Date()).getTime(), // current time
+                                y = d.data;
+                            series.addPoint([x, y], true, true);
+                        }, 1000);
+                    }
+                }
+            },
+            title: {
+                text: 'Live random data'
+            },
+            xAxis: {
+                type: 'datetime',
+                tickPixelInterval: 150
+            },
+            yAxis: {
+                title: {
+                    text: 'Value'
+                },
+                plotLines: [{
+                    value: 0,
+                    width: 1,
+                    color: '#808080'
+                }]
+            },
+            tooltip: {
+                formatter: function() {
+                        return '<b>'+ this.series.name +'</b><br/>'+
+                        Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) +'<br/>'+
+                        Highcharts.numberFormat(this.y, 1000);
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            exporting: {
+                enabled: false
+            },
+            series: [{
+                name: 'Random data',
+                data: (function() {
+                    // generate an array of random data
+                    var data = [],
+                        time = (new Date()).getTime(),
+                        i;
+    
+                    for (i = -19; i <= 0; i++) {
+                        temp.push({
+                            x: time + i * 1000,
+                            
+                        });
+                    }
+                    return data;
+                })()
+            }]
+        });
+    });
+   socket.onopen = function () {   //socket接收数据函数
+            console.log('连接成功');       //console 显示连接成功
+            socket.send('test');       //接收服务端发送的test变量
+        }
+
+        socket.onmessage = function (data) {     
+            var d = JSON.parse(data.data);   //定义d为JSON格式数值
+            console.log(d.data);   //输出d数值
+            //            
+          //  d = data;
+            temp.push(d.data);  //传给temp
+            console.log(temp);  //输出
+            chart.series[0].setData(temp); //传给图表series,也就是y轴上的值
+        }
+
+        socket.onclose = function () {      //本次传值结束，关闭连接
+            console.log('关闭');            //console 显示关闭
+        } 
+});
+
+</script>
+</head>
+
+<body>
+<script type="text/javascript" src="js/modules/exporting.js"></script>
+<div id="container" style="height: 400px"></div>
+</body>
+</html>
